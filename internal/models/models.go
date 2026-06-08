@@ -2,61 +2,95 @@ package models
 import ("time")
 
 //payment life cycle
-type payment struct {
-	system_id string
-	order_id string
-	customer_id string
-	amount int
-
-	authorization_id string
-	authorized_creation time.Time
-	authorization_expiry time.Time
-	currency string
-	status string
-	
-	capture_id string
-	capture_at time.Time
-
-	void_id string
-	voided_At time.Time
-
-	refund_id string
-	refunded_at time.Time
-
+type Payment struct {
+	System_id string
+	Order_id string
+	Customer_id string
+	Amount int
+	Authorization_id string
+	Authorized_creation time.Time
+	Authorization_expiry time.Time
+	Currency string
+	Status string
+	Capture_id string
+	Capture_at time.Time
+	Void_id string
+	Refund_id string
 }
 
-type card struct {
-  	card_number string
-  	cvv string
-  	expiry_month int
-  	expiry_year int
+type Card struct {
+  	Card_number string
+  	Cvv string
+  	Expiry_month int
+  	Expiry_year int
 }
 //request from the ficmart
-type martrequest struct {
-	order_id string
-	customer_id string
-	amount int
-	system_id string
-	carddetails card
+type Martrequest struct {
+	Order_id string
+	Customer_id string
+	Amount int
+	System_id string
+	Carddetails Card
 }
 
 
 // request to the bank
-type bankauthrequest struct {
-	amount int
-	carddetails card
+type Bankauthrequest struct {
+	Amount int
+	Carddetails Card
 }
 
-type bankcapturerequest struct {
-	amount int
-	authorization_id string
+type Bankcapturerequest struct {
+	Amount int
+	Authorization_id string
 }
 
-type bankvoidrequest struct {
-	authorization_id string
+type Bankvoidrequest struct {
+	Authorization_id string
 }
 
-type bankrefundrequest struct {
-	amount int
-	capturen_id string
+type Bankrefundrequest struct {
+	Amount int
+	Capture_id string
+}
+
+//response from the bank
+
+type Bankauthresponse struct {
+	Amount int `json:"amount"`
+	Authorization_id string `json:"authorization_id"`
+	Created_at time.Time `json:"created_at"`
+	Expires_at time.Time `json:"expires_at"`
+	Currency string `json:"currency"`
+	Status string `json:"status"`
+}
+
+type Captureresponse struct {
+	Amount int `json:"amount"`
+	Authorization_id string `json:"authorization_id"`
+	Capture_id string `json:"capture_id"`
+	Captured_at time.Time `json:"captured_at"`
+	Currency string `json:"currency"`
+	Status string `json:"status"`
+}
+
+type Voidresponse struct {
+	Authorization_id string `json:"authorization_id"`
+	Status string `json:"status"`
+	Void_id string `json:"void_id"`
+	Voided_At time.Time `json:"voided_at"`
+}
+
+type Refundresponse struct {
+	Amount int `json:"amount"`
+	Capture_id string `json:"capture_id"`
+	Currency string `json:"currency"`
+	Refund_id string `json:"refund_id"`
+	Refunded_at time.Time `json:"refunded_at"`
+	Status string `json:"status"`
+}
+
+type Errorresponse struct {
+	Error string `json:"error"`
+	Message string `json:"message"`
 }
