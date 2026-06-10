@@ -18,33 +18,27 @@ type Payment struct {
 	Refund_id string
 }
 
-type Card struct {
-  	Card_number string 
-  	Cvv string
-  	Expiry_month int
-  	Expiry_year int
-}
 
-// type Card struct {
-//   	Card_number string `json:"card_number"`
-//   	Cvv string `json:"cvv"`
-//   	Expiry_month int `json:"expiry_month"`
-//   	Expiry_year int `json:"expiry_year"`
-// }
 //request from the ficmart
 type Martrequest struct {
 	Order_id string
 	Customer_id string
 	Amount int
 	System_id string
-	Carddetails Card
+	Card_number string `json:"card_number"`
+  	Cvv string `json:"cvv"`
+  	Expiry_month int `json:"expiry_month"`
+  	Expiry_year int `json:"expiry_year"`
 }
 
 
 // request to the bank
 type Bankauthrequest struct {
-	Amount int
-	Carddetails Card
+	Amount int `json:"amount"`
+	Card_number string `json:"card_number"`
+  	Cvv string `json:"cvv"`
+  	Expiry_month int `json:"expiry_month"`
+  	Expiry_year int `json:"expiry_year"`
 }
 
 type Bankcapturerequest struct {

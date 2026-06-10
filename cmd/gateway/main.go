@@ -6,8 +6,7 @@ import (
 )
 
 func main() {
-	err := bank.SendAuthorizationRequestToBank()
-	fmt.Println("error o")
-	fmt.Println(err)
-	
+	// err := bank.SendAuthorizationRequestToBank()
+	err := bank.SendCaptureRequest()
+	fmt.Println(err, "captured")
 }
