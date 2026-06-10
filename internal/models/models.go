@@ -19,11 +19,18 @@ type Payment struct {
 }
 
 type Card struct {
-  	Card_number string
+  	Card_number string 
   	Cvv string
   	Expiry_month int
   	Expiry_year int
 }
+
+// type Card struct {
+//   	Card_number string `json:"card_number"`
+//   	Cvv string `json:"cvv"`
+//   	Expiry_month int `json:"expiry_month"`
+//   	Expiry_year int `json:"expiry_year"`
+// }
 //request from the ficmart
 type Martrequest struct {
 	Order_id string
@@ -60,8 +67,8 @@ type Bankauthresponse struct {
 	Amount int `json:"amount"`
 	Authorization_id string `json:"authorization_id"`
 	Created_at time.Time `json:"created_at"`
-	Expires_at time.Time `json:"expires_at"`
 	Currency string `json:"currency"`
+	Expires_at time.Time `json:"expires_at"`
 	Status string `json:"status"`
 }
 
