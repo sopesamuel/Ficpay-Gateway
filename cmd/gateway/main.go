@@ -7,6 +7,8 @@ import (
 
 func main() {
 	// err := bank.SendAuthorizationRequestToBank()
-	err := bank.SendCaptureRequest()
-	fmt.Println(err, "captured")
+	// err := bank.SendVoidRequest()
+	// err := bank.SendCaptureRequest()
+	err := bank.SendRefundRequest()
+	fmt.Println(err, "refund")
 }
