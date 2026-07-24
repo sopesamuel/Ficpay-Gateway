@@ -3,7 +3,7 @@ import ("time")
 
 //payment life cycle
 type Payment struct {
-	System_id string
+	Payment_id string
 	Order_id string
 	Customer_id string
 	Amount int
@@ -17,7 +17,6 @@ type Payment struct {
 	Void_id string
 	Refund_id string
 }
-
 
 //request from the ficmart
 type Martrequest struct {

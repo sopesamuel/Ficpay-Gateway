@@ -7,17 +7,21 @@ import (
 	"mart-gateway/internal/models"
 	"net/http"
 )
+
 type BankInterface interface {
-	SendAuthorizationRequestToBank() 
+	SendAuthorizationRequestToBank()
+	SendCaptureRequestToBank()
+	SendVoidRequestToBank()
+	SendRefundRequestToBank()
 }
 
+//This holds the shared state used by all these methods.
 type Bankclientstruct struct {
 	baseURL string
 	httpClient *http.Client
 }
 
-
-func SendAuthorizationRequestToBank() (error){
+func (cfg *Bankclientstruct) SendAuthorizationRequestToBank() (error){
 	posturl := "http://localhost:8787/api/v1/authorizations"
 
 	req := models.Bankauthrequest{
@@ -68,7 +72,7 @@ func SendAuthorizationRequestToBank() (error){
 	return nil
 }
 
-func SendCaptureRequest() (error){
+func SendCaptureRequestToBank() (error){
 
 	posturl := "http://localhost:8787/api/v1/captures"
 
@@ -124,7 +128,7 @@ func SendCaptureRequest() (error){
 
 }
 
-func SendVoidRequest() (error){
+func SendVoidRequestToBank() (error){
 
 
 	posturl := "http://localhost:8787/api/v1/voids"
@@ -177,7 +181,7 @@ func SendVoidRequest() (error){
 }
 
 
-func SendRefundRequest() (error){
+func SendRefundRequestToBank() (error){
 
 
 	posturl := "http://localhost:8787/api/v1/refunds"

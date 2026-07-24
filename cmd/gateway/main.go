@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"mart-gateway/internal/bank"
 )
 
+//configuration
+//repository
+
 func main() {
-	// err := bank.SendAuthorizationRequestToBank()
-	// err := bank.SendVoidRequest()
-	// err := bank.SendCaptureRequest()
-	err := bank.SendRefundRequest()
-	fmt.Println(err, "refund")
+	bank.SendRefundRequestToBank()
 }
