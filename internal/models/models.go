@@ -3,19 +3,18 @@ import ("time")
 
 //payment life cycle
 type Payment struct {
-	Payment_id string
-	Order_id string
-	Customer_id string
-	Amount int
-	Authorization_id string
-	Authorized_creation time.Time
-	Authorization_expiry time.Time
-	Currency string
-	Status string
-	Capture_id string
-	Capture_at time.Time
-	Void_id string
-	Refund_id string
+    PaymentID  string
+    OrderID    string
+    CustomerID string
+    Amount     int
+    Currency   string
+    Status     string
+    AuthID     *string
+    CaptureID  *string
+    VoidID     *string
+    RefundID   *string
+    CreatedAt  time.Time
+    UpdatedAt  time.Time
 }
 
 //request from the ficmart
