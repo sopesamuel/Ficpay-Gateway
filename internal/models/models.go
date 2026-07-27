@@ -1,5 +1,8 @@
 package models
-import ("time")
+
+import (
+	"time"
+)
 
 //payment life cycle
 type Payment struct {
@@ -15,6 +18,15 @@ type Payment struct {
     RefundID   *string
     CreatedAt  time.Time
     UpdatedAt  time.Time
+}
+
+//state history of each payment
+type StateHistory struct {
+	Id int
+	PaymentID string
+	FromStatus *string
+	ToStatus string
+	ChangedAt time.Time
 }
 
 //request from the ficmart
