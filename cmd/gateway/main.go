@@ -1,24 +1,26 @@
 package main
 
 import (
-	"mart-gateway/internal/bank"
 	"database/sql"
 	"flag"
 	"os"
+	"mart-gateway/internal/repository"
 )
 
 //configuration
 //repository
 
 func main() {
-	bank.SendRefundRequestToBank()
 
-	dsn := flag.String("dsn", "web:pass@tcp(localhost:3306)/snippetbox?parseTime=true", "MySQL data source name") 
-
-	_, err := openDB(*dsn)
+	dsn := flag.String("dsn", "gateway:gatewaypass@tcp(localhost:3306)/payment_gateway?parseTime=true", "MySQL data source name")
+	db , err := openDB(*dsn)
 	if err != nil {
 		os.Exit(1)
 	}
+	defer db.Close()
+
+	_ = repository.NewPaymentRepository(db)
+
 }
 
 
