@@ -1,4 +1,5 @@
 # Env
+.env.example
 .env
 *.env
 
