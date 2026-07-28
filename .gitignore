@@ -1,0 +1,19 @@
+# Env
+.env
+*.env
+
+# Go binaries
+/bin/
+*.exe
+*.test
+*.out
+
+# Go build cache
+vendor/
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
