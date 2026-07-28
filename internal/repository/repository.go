@@ -32,7 +32,8 @@ func (r *Repository) CreatePayment(payment *models.Payment) error {
 	return err
 }
 
-func (r *Repository) StatePayments(state *models.StateHistory) error {
+
+func (r *Repository) CreateStateHistory(state *models.StateHistory) error {
 	_, err := r.DB.Exec(
 		`INSERT INTO state_history (payment_id, from_status, to_status)
 		VALUES (?, ?, ?)`,

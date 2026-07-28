@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS payments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )
 
+-- update auto refreshes after there is a change, the "on update" i mean.
+
 CREATE TABLE IF NOT EXISTS state_history (
     id INT AUTO_INCREMENT PRIMARY KEY, 
     payment_id VARCHAR(36) NOT NULL, 
