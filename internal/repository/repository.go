@@ -14,6 +14,8 @@ func NewPaymentRepository(db *sql.DB) *Repository {
 }
 
 //we basically inserting into the created table values that have filled our payment struct
+
+// This triggers on authorize, first transaction.
 func (r *Repository) CreatePayment(payment *models.Payment) error {
 	_, err := r.DB.Exec(
 		`INSERT INTO payments (payment_id, order_id, customer_id, amount, currency, status, auth_id, capture_id, void_id, refund_id)
@@ -40,6 +42,19 @@ func (r *Repository) CreateStateHistory(state *models.StateHistory) error {
 		state.PaymentID,
 		state.FromStatus,
 		state.ToStatus,
+	)
+	return err
+}
+
+
+func (r *Repository) UpdatePaymentState(payment *models.Payment) error {
+	_, err := r.DB.Exec(
+		`UPDATE payments SET status = ?, capture_id = ?, void_id = ?, refund_id = ? 
+		WHERE payment_id = ?`,
+		payment.Status,
+		payment.CaptureID,
+		payment.VoidID,
+		payment.RefundID,
 	)
 	return err
 }
