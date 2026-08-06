@@ -14,7 +14,6 @@ func NewPaymentRepository(db *sql.DB) *Repository {
 }
 
 //we basically inserting into the created table values that have filled our payment struct
-
 // This triggers on authorize, first transaction.
 func (r *Repository) CreatePayment(payment *models.Payment) error {
 	_, err := r.DB.Exec(
@@ -87,3 +86,18 @@ func (r *Repository) GetPaymentByID(paymentID string) (models.Payment, error){
 
 	return payment,nil
 }
+
+func (r *Repository) GetStatusByID(orderID string) (string, error) {
+	var status string
+
+	stmt := `SELECT status FROM payments WHERE order_id = ?`
+
+	err := r.DB.QueryRow(stmt, orderID).Scan(&status)
+	if err != nil {
+		return "", err
+	}
+
+	return status, nil
+}
+
+	
