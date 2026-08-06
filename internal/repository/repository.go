@@ -34,7 +34,6 @@ func (r *Repository) CreatePayment(payment *models.Payment) error {
 	return err
 }
 
-
 func (r *Repository) CreateStateHistory(state *models.StateHistory) error {
 	_, err := r.DB.Exec(
 		`INSERT INTO state_history (payment_id, from_status, to_status)
@@ -46,7 +45,6 @@ func (r *Repository) CreateStateHistory(state *models.StateHistory) error {
 	return err
 }
 
-
 func (r *Repository) UpdatePaymentState(payment *models.Payment) error {
 	_, err := r.DB.Exec(
 		`UPDATE payments SET status = ?, capture_id = ?, void_id = ?, refund_id = ? 
@@ -55,6 +53,37 @@ func (r *Repository) UpdatePaymentState(payment *models.Payment) error {
 		payment.CaptureID,
 		payment.VoidID,
 		payment.RefundID,
+		payment.PaymentID,
 	)
 	return err
+}
+
+
+
+func (r *Repository) GetPaymentByID(paymentID string) (models.Payment, error){
+	payment := models.Payment{}
+
+	stmt := `SELECT payment_id, order_id, customer_id, amount, currency, status, auth_id, capture_id, void_id, refund_id, created_at, updated_at 
+	FROM payments WHERE payment_id = ? `
+
+	err := r.DB.QueryRow(stmt,paymentID).Scan(
+		&payment.PaymentID,
+ 		&payment.OrderID,
+ 		&payment.CustomerID,
+ 		&payment.Amount,
+ 		&payment.Currency,
+ 		&payment.Status,
+ 		&payment.AuthID,
+ 		&payment.CaptureID,
+ 		&payment.VoidID,
+ 		&payment.RefundID,
+		&payment.CreatedAt,
+		&payment.UpdatedAt,
+	)
+
+	if err != nil {
+		return models.Payment{}, err
+	}
+
+	return payment,nil
 }

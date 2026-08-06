@@ -19,6 +19,8 @@ type Payment struct {
     CreatedAt  time.Time
     UpdatedAt  time.Time
 }
+// regarding the pointers in the table, those values are null, and we use a nil pointer to enable the go mysql driver see that
+// and send null to mysql
 
 //state history of each payment
 type StateHistory struct {

@@ -23,3 +23,5 @@ CREATE TABLE IF NOT EXISTS state_history (
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (payment_id) REFERENCES payments(payment_id)
 )
+
+-- the foreign key is a mysql keyword that tells mysql that before accepting into payment id, check if it exists in payments payment id
