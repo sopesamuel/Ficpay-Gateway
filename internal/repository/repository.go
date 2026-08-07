@@ -98,38 +98,49 @@ func (r *Repository) GetStatusByID(orderID string) (string, error) {
 	return status, nil
 }
 
-func (r *Repository) GetHistoryByCustomerID(customerID string) (models.Payment, error){
-	payment := models.Payment{}
+func (r *Repository) GetHistoryByCustomerID(customerID string) ([]models.Payment, error){
+	
 
 	stmt := `SELECT payment_id, order_id, customer_id, amount, currency, status, auth_id, capture_id, void_id, refund_id, created_at, updated_at 
 	FROM payments WHERE customer_id = ? `
 
-	rows, _ := r.DB.Query(stmt,customerID)
+	rows, err := r.DB.Query(stmt,customerID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	history := []models.Payment{}
 	for rows.Next() {
+			
+			payment := models.Payment{}
+			err := rows.Scan(
+				&payment.PaymentID,
+ 				&payment.OrderID,
+ 				&payment.CustomerID,
+ 				&payment.Amount,
+ 				&payment.Currency,
+ 				&payment.Status,
+ 				&payment.AuthID,
+ 				&payment.CaptureID,
+ 				&payment.VoidID,
+ 				&payment.RefundID,
+				&payment.CreatedAt,
+				&payment.UpdatedAt,
+			)
+			if err != nil {
+				return  []models.Payment{}, err
+			}
 
+			history = append(history, payment)
 	}
-
+	
 	if err := rows.Err(); err != nil {
-    return models.Payment{}, err
+    return []models.Payment{}, err
 	}
 
-
-	// .Scan(
-	// 	&payment.PaymentID,
- 	// 	&payment.OrderID,
- 	// 	&payment.CustomerID,
- 	// 	&payment.Amount,
- 	// 	&payment.Currency,
- 	// 	&payment.Status,
- 	// 	&payment.AuthID,
- 	// 	&payment.CaptureID,
- 	// 	&payment.VoidID,
- 	// 	&payment.RefundID,
-	// 	&payment.CreatedAt,
-	// 	&payment.UpdatedAt,
-	// )
-
-	return payment,nil
+	return history,nil
 }
 
 
