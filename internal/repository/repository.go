@@ -57,8 +57,6 @@ func (r *Repository) UpdatePaymentState(payment *models.Payment) error {
 	return err
 }
 
-
-
 func (r *Repository) GetPaymentByID(paymentID string) (models.Payment, error){
 	payment := models.Payment{}
 
@@ -99,5 +97,40 @@ func (r *Repository) GetStatusByID(orderID string) (string, error) {
 
 	return status, nil
 }
+
+func (r *Repository) GetHistoryByCustomerID(customerID string) (models.Payment, error){
+	payment := models.Payment{}
+
+	stmt := `SELECT payment_id, order_id, customer_id, amount, currency, status, auth_id, capture_id, void_id, refund_id, created_at, updated_at 
+	FROM payments WHERE customer_id = ? `
+
+	rows, _ := r.DB.Query(stmt,customerID)
+	for rows.Next() {
+
+	}
+
+	if err := rows.Err(); err != nil {
+    return models.Payment{}, err
+	}
+
+
+	// .Scan(
+	// 	&payment.PaymentID,
+ 	// 	&payment.OrderID,
+ 	// 	&payment.CustomerID,
+ 	// 	&payment.Amount,
+ 	// 	&payment.Currency,
+ 	// 	&payment.Status,
+ 	// 	&payment.AuthID,
+ 	// 	&payment.CaptureID,
+ 	// 	&payment.VoidID,
+ 	// 	&payment.RefundID,
+	// 	&payment.CreatedAt,
+	// 	&payment.UpdatedAt,
+	// )
+
+	return payment,nil
+}
+
 
 	
