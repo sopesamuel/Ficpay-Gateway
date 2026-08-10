@@ -4,7 +4,7 @@ import (
 	"mart-gateway/internal/models"
 )
 
-type repositoryInterface interface {
+type RepositoryInterface interface {
 	CreatePayment(payment *models.Payment) error
 	CreateStateHistory(state *models.StateHistory) error
 	UpdatePaymentState(payment *models.Payment) error
