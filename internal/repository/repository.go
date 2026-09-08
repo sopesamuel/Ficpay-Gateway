@@ -17,15 +17,14 @@ func NewPaymentRepository(db *sql.DB) *Repository {
 // This triggers on authorize, first transaction.
 func (r *Repository) CreatePayment(payment *models.Payment) error {
 	_, err := r.DB.Exec(
-		`INSERT INTO payments (payment_id, order_id, customer_id, amount, currency, status, auth_id, capture_id, void_id, refund_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO payments (payment_id, order_id, customer_id, amount, currency, status, capture_id, void_id, refund_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		payment.PaymentID,
 		payment.OrderID,
 		payment.CustomerID,
 		payment.Amount,
 		payment.Currency,
 		payment.Status,
-		payment.AuthID,
 		payment.CaptureID,
 		payment.VoidID,
 		payment.RefundID,
@@ -46,9 +45,10 @@ func (r *Repository) CreateStateHistory(state *models.StateHistory) error {
 
 func (r *Repository) UpdatePaymentState(payment *models.Payment) error {
 	_, err := r.DB.Exec(
-		`UPDATE payments SET status = ?, capture_id = ?, void_id = ?, refund_id = ? 
+		`UPDATE payments SET status = ?, auth_id = ?, capture_id = ?, void_id = ?, refund_id = ? 
 		WHERE payment_id = ?`,
 		payment.Status,
+		payment.AuthID,
 		payment.CaptureID,
 		payment.VoidID,
 		payment.RefundID,
