@@ -37,7 +37,6 @@ func StateMachine(from, to string) bool {
 func (state MainService) AuthorizePayment(req models.Martrequest, bankreq models.Bankauthrequest, key string) (models.Payment,error){
 	//send the request to the bank TO INITIATE PENDING AND AUTHORIZATION states
 	
-	
 	auth_payment := models.Payment{
 		PaymentID: uuid.New().String(), 
 		OrderID: req.Order_id, 
@@ -76,8 +75,36 @@ func (state MainService) AuthorizePayment(req models.Martrequest, bankreq models
 	
 	err = state.repository.CreateStateHistory(&models.StateHistory{PaymentID: auth_payment.PaymentID, FromStatus: &pending_state, ToStatus: "AUTHORIZED"})
 	if err != nil{
-		return models.Payment{},  fmt.Errorf("failed to store history OF authorization record to stae history db: %w", err)
+		return models.Payment{},  fmt.Errorf("failed to store history OF authorization record to state history db: %w", err)
 	}
 
 	return  auth_payment, nil
+}
+
+func (state MainService) CapturePayment(payment_id string, bankreq models.Bankcapturerequest, key string) (models.Payment, error){
+	res_payment ,err := state.repository.GetPaymentByID(payment_id)
+	if err != nil{
+		return models.Payment{},  fmt.Errorf("failed to get payment reference from db: %w", err)
+	}
+
+	if !StateMachine(res_payment.Status, "CAPTURED"){
+		return models.Payment{},  fmt.Errorf("Invalid payment transition: %w", err)
+	}
+
+	//THEN RECORD THE PENDING STATE
+	err = state.repository.CreateStateHistory(&models.StateHistory{ PaymentID: res_payment.PaymentID, FromStatus: &res_payment.Status, ToStatus: "CAPTURED",})
+	if err != nil{
+		return models.Payment{},  fmt.Errorf("failed to store captured state history to state history db: %w", err)
+	}
+
+	
+
+	cap_res, err := state.bank.Capture(bankreq, key)
+	if err != nil {
+		return models.Payment{},  fmt.Errorf("failed to capture payment: %w", err)
+	}
+	res_payment.CaptureID = &cap_res.Capture_id
+	res_payment.Status = "CAPTURED"
+
+	return res_payment, nil
 }
