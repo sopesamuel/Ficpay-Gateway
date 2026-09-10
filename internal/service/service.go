@@ -88,23 +88,28 @@ func (state MainService) CapturePayment(payment_id string, bankreq models.Bankca
 	}
 
 	if !StateMachine(res_payment.Status, "CAPTURED"){
-		return models.Payment{},  fmt.Errorf("Invalid payment transition: %w", err)
+		return models.Payment{},  fmt.Errorf("Invalid payment transition from: %s to %s",res_payment.Status, "CAPTURED")
 	}
-
-	//THEN RECORD THE PENDING STATE
-	err = state.repository.CreateStateHistory(&models.StateHistory{ PaymentID: res_payment.PaymentID, FromStatus: &res_payment.Status, ToStatus: "CAPTURED",})
-	if err != nil{
-		return models.Payment{},  fmt.Errorf("failed to store captured state history to state history db: %w", err)
-	}
-
-	
 
 	cap_res, err := state.bank.Capture(bankreq, key)
 	if err != nil {
-		return models.Payment{},  fmt.Errorf("failed to capture payment: %w", err)
+		return models.Payment{},  fmt.Errorf("failed to capture payment from bank: %w", err)
 	}
+
+	prev_status := res_payment.Status
 	res_payment.CaptureID = &cap_res.Capture_id
 	res_payment.Status = "CAPTURED"
+
+	err = state.repository.UpdatePaymentState(&res_payment)
+	if err != nil{
+		return models.Payment{},  fmt.Errorf("failed to store authorization record to payment db: %w", err)
+	}
+
+	//THEN RECORD THE CAPTURED STATE
+	err = state.repository.CreateStateHistory(&models.StateHistory{ PaymentID: res_payment.PaymentID, FromStatus: &prev_status, ToStatus: "CAPTURED",})
+	if err != nil{
+		return models.Payment{},  fmt.Errorf("failed to store captured state history to state history db: %w", err)
+	}
 
 	return res_payment, nil
 }
