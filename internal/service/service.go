@@ -121,6 +121,8 @@ func (state MainService) VoidPayment(payment_id string, bankreq models.Bankvoidr
 		return models.Payment{},  fmt.Errorf("failed to get payment reference from db: %w", err)
 	}
 
+	if !StateMachine(res_payment.Status, "VOIDED")
+
 	void_res, err := state.bank.Void(bankreq, key)
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("Bank unable to void transaction: %w", err)
