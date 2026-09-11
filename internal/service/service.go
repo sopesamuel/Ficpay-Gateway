@@ -24,6 +24,7 @@ func StateMachine(from, to string) bool {
 		"PENDING": {"AUTHORIZED"},
 		"AUTHORIZED": {"CAPTURED", "VOIDED"},
 		"CAPTURED": {"REFUNDED"},
+		
 	}
 
 	if slices.Contains(state[from], to){
@@ -109,6 +110,34 @@ func (state MainService) CapturePayment(payment_id string, bankreq models.Bankca
 	err = state.repository.CreateStateHistory(&models.StateHistory{ PaymentID: res_payment.PaymentID, FromStatus: &prev_status, ToStatus: "CAPTURED",})
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("failed to store captured state history to state history db: %w", err)
+	}
+
+	return res_payment, nil
+}
+
+func (state MainService) VoidPayment(payment_id string, bankreq models.Bankvoidrequest, key string) (models.Payment, error){
+	res_payment ,err := state.repository.GetPaymentByID(payment_id)
+	if err != nil{
+		return models.Payment{},  fmt.Errorf("failed to get payment reference from db: %w", err)
+	}
+
+	void_res, err := state.bank.Void(bankreq, key)
+	if err != nil{
+		return models.Payment{},  fmt.Errorf("Bank unable to void transaction: %w", err)
+	}
+
+	prev_status := res_payment.Status
+	res_payment.Status = "VOIDED"
+	res_payment.VoidID = &void_res.Void_id
+
+	err = state.repository.UpdatePaymentState(&res_payment)
+	if err != nil{
+		return models.Payment{},  fmt.Errorf("Unable to update voided transaction to payment db: %w", err)
+	}
+
+	err = state.repository.CreateStateHistory(&models.StateHistory{PaymentID: res_payment.PaymentID, FromStatus: &prev_status, ToStatus: "VOIDED",})
+	if err != nil{
+		return models.Payment{},  fmt.Errorf("Unable to store voided transaction to state history db: %w", err)
 	}
 
 	return res_payment, nil
