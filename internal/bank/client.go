@@ -8,13 +8,6 @@ import (
 	"net/http"
 )
 
-type BankInterface interface {
-	SendAuthorizationRequestToBank()
-	SendCaptureRequestToBank()
-	SendVoidRequestToBank()
-	SendRefundRequestToBank()
-}
-
 //This holds the shared state used by all these methods.
 type Bankclientstruct struct {
 	baseURL string
@@ -72,7 +65,7 @@ func (cfg *Bankclientstruct) SendAuthorizationRequestToBank() (error){
 	return nil
 }
 
-func SendCaptureRequestToBank() (error){
+func (cfg *Bankclientstruct) SendCaptureRequestToBank() (error){
 
 	posturl := "http://localhost:8787/api/v1/captures"
 
@@ -94,7 +87,6 @@ func SendCaptureRequestToBank() (error){
 	r.Header.Add("Content-Type", "application/json")
 	r.Header.Add("Idempotency-Key", "2")
 
-
 	client := &http.Client{}
 	res, err := client.Do(r)
 	if err != nil{
@@ -115,8 +107,6 @@ func SendCaptureRequestToBank() (error){
 		return fmt.Errorf("Error decoding message response body -%v", res.Status)
 		}
 
-	
-
 	fmt.Println(post.Amount)
 	fmt.Println(post.Authorization_id)
 	fmt.Println(post.Capture_id)
@@ -128,7 +118,7 @@ func SendCaptureRequestToBank() (error){
 
 }
 
-func SendVoidRequestToBank() (error){
+func (cfg *Bankclientstruct) SendVoidRequestToBank() (error){
 
 
 	posturl := "http://localhost:8787/api/v1/voids"
@@ -181,7 +171,7 @@ func SendVoidRequestToBank() (error){
 }
 
 
-func SendRefundRequestToBank() (error){
+func (cfg *Bankclientstruct) SendRefundRequestToBank() (error){
 
 
 	posturl := "http://localhost:8787/api/v1/refunds"
