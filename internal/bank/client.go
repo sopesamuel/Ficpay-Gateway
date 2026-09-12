@@ -130,8 +130,8 @@ func (cfg *Bankclientstruct) SendVoidRequestToBank(bank_void models.Bankvoidrequ
 	post := models.Voidresponse{}
 	err = json.NewDecoder(res.Body).Decode(&post)
 	if err != nil{
-		return models.Voidresponse{}, fmt.Errorf("Error decoding message response body response for bank void request-%v", res.Status)
-		}
+		return models.Voidresponse{}, fmt.Errorf("Error decoding message response body response for bank void request-%w", err)
+	}
 
 	return post,nil
 }
