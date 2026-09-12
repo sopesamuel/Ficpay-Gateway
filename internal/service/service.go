@@ -35,7 +35,7 @@ func StateMachine(from, to string) bool {
 
 //Authorize to bank from ficmart
 
-func (state MainService) AuthorizePayment(req models.Martrequest, bankreq models.Bankauthrequest, key string) (models.Payment,error){
+func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq models.Bankauthrequest, key string) (models.Payment,error){
 	//send the request to the bank TO INITIATE PENDING AND AUTHORIZATION states
 	
 	auth_payment := models.Payment{
@@ -82,7 +82,7 @@ func (state MainService) AuthorizePayment(req models.Martrequest, bankreq models
 	return  auth_payment, nil
 }
 
-func (state MainService) CapturePayment(payment_id string, bankreq models.Bankcapturerequest, key string) (models.Payment, error){
+func (state *MainService) CapturePayment(payment_id string, bankreq models.Bankcapturerequest, key string) (models.Payment, error){
 	res_payment ,err := state.repository.GetPaymentByID(payment_id)
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("failed to get payment reference from db: %w", err)
@@ -115,7 +115,7 @@ func (state MainService) CapturePayment(payment_id string, bankreq models.Bankca
 	return res_payment, nil
 }
 
-func (state MainService) VoidPayment(payment_id string, bankreq models.Bankvoidrequest, key string) (models.Payment, error){
+func (state *MainService) VoidPayment(payment_id string, bankreq models.Bankvoidrequest, key string) (models.Payment, error){
 	res_payment ,err := state.repository.GetPaymentByID(payment_id)
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("failed to get payment reference from db for void transaction: %w", err)
@@ -147,7 +147,7 @@ func (state MainService) VoidPayment(payment_id string, bankreq models.Bankvoidr
 	return res_payment, nil
 }
 
-func (state MainService) RefundPayment(payment_id string, refundreq models.Bankrefundrequest, key string,) (models.Payment, error){
+func (state *MainService) RefundPayment(payment_id string, refundreq models.Bankrefundrequest, key string,) (models.Payment, error){
 
 	res_payment ,err := state.repository.GetPaymentByID(payment_id)
 	if err != nil{
