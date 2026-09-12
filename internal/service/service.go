@@ -188,3 +188,12 @@ func (state *MainService) GetPayment(payment_id string) (models.Payment, error){
 
 	return res_payment, nil
 }
+
+func (state *MainService) GetStatus(order_id string) (string, error){
+	status, err := state.repository.GetStatusByID(order_id)
+	if err != nil{
+		return "",  fmt.Errorf("failed to get status of payment from db: %w", err)
+	}
+
+	return status, nil
+}
