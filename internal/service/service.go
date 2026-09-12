@@ -179,3 +179,12 @@ func (state *MainService) RefundPayment(payment_id string, refundreq models.Bank
 
 	return res_payment, nil
 }
+
+func (state *MainService) GetPayment(payment_id string) (models.Payment, error){
+	res_payment, err := state.repository.GetPaymentByID(payment_id)
+	if err != nil{
+		return models.Payment{},  fmt.Errorf("failed to get payment reference from db for id: %w", err)
+	}
+
+	return res_payment, nil
+}
