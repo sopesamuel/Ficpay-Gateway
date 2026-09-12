@@ -197,3 +197,12 @@ func (state *MainService) GetStatus(order_id string) (string, error){
 
 	return status, nil
 }
+
+func (state *MainService) GetHistory(customerID string) ([]models.Payment, error){
+	history, err := state.repository.GetHistoryByCustomerID(customerID)
+	if err != nil{
+		return []models.Payment{},  fmt.Errorf("failed to get history of customer from db: %w", err)
+	}
+
+	return history, nil
+}
