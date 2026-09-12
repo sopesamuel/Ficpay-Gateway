@@ -77,7 +77,7 @@ func (cfg *Bankclientstruct) SendCaptureRequestToBank(bankcapture_req models.Ban
 	
 	res, err := cfg.httpClient.Do(r)
 	if err != nil{
-		return models.Captureresponse{}, fmt.Errorf("Error in capture request while http client -%w", err)
+		return models.Captureresponse{}, fmt.Errorf("Error configuring new client to the bank for capture request! -%w", err)
 	}
 
 	defer res.Body.Close()
@@ -97,33 +97,26 @@ func (cfg *Bankclientstruct) SendCaptureRequestToBank(bankcapture_req models.Ban
 	return post, nil
 }
 
-func (cfg *Bankclientstruct) SendVoidRequestToBank() (error){
+func (cfg *Bankclientstruct) SendVoidRequestToBank(bank_void models.Bankvoidrequest, key string) (models.Voidresponse, error){
 
-
-	posturl := "http://localhost:8787/api/v1/voids"
-
-	capreq := models.Bankvoidrequest{
-		Authorization_id : "auth_13bb859d-c4b8-4ed4-aafc-efc1899591e2",
+	body, err := json.Marshal(bank_void)
+	if err != nil {
+		return models.Voidresponse{}, fmt.Errorf("Error json marshalling our bank void request struct! %w", err)
 	}
 
-	body, err := json.Marshal(capreq)
+	r, err := http.NewRequest("POST", cfg.baseURL + "/api/v1/voids", bytes.NewBuffer(body))
 	if err != nil {
-		fmt.Println("Error message for json marshalling our structs for now!")
-	}
-
-	r, err := http.NewRequest("POST", posturl, bytes.NewBuffer(body))
-	if err != nil {
-		fmt.Println("Error message for creating post request for authorization for now!")
+		return models.Voidresponse{}, fmt.Errorf("Error creating new post request to the bank for void request! %w", err)
 	}
 
 	r.Header.Add("Content-Type", "application/json")
-	r.Header.Add("Idempotency-Key", "2")
+	r.Header.Add("Idempotency-Key", key)
 
 
-	client := &http.Client{}
-	res, err := client.Do(r)
+	
+	res, err := cfg.httpClient.Do(r)
 	if err != nil{
-		return fmt.Errorf("Error in http client creating request -%s", err.Error())
+		return models.Voidresponse{} , fmt.Errorf("Error configuring new client to the bank for void request! -%w", err)
 	}
 
 	defer res.Body.Close()
@@ -131,22 +124,16 @@ func (cfg *Bankclientstruct) SendVoidRequestToBank() (error){
 	errormessage := &models.Errorresponse{}
 	if res.StatusCode != http.StatusOK {
 		json.NewDecoder(res.Body).Decode(errormessage)
-		return fmt.Errorf("%s: with %s %v", errormessage.Message, errormessage.Error, res.Status)
+		return models.Voidresponse{},fmt.Errorf("%s: with %s %v", errormessage.Message, errormessage.Error, res.Status)
 	}
 
-	post := &models.Voidresponse{}
-	err = json.NewDecoder(res.Body).Decode(post)
+	post := models.Voidresponse{}
+	err = json.NewDecoder(res.Body).Decode(&post)
 	if err != nil{
-		return fmt.Errorf("Error decoding message response body -%v", res.Status)
+		return models.Voidresponse{}, fmt.Errorf("Error decoding message response body response for bank void request-%v", res.Status)
 		}
 
-	
-	fmt.Println(post.Authorization_id)
-	fmt.Println(post.Void_id)
-	fmt.Println(post.Voided_At)
-	fmt.Println(post.Status)
-
-	return nil
+	return post,nil
 }
 
 
