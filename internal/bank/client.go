@@ -137,34 +137,24 @@ func (cfg *Bankclientstruct) SendVoidRequestToBank(bank_void models.Bankvoidrequ
 }
 
 
-func (cfg *Bankclientstruct) SendRefundRequestToBank() (error){
+func (cfg *Bankclientstruct) SendRefundRequestToBank(refund_req models.Bankrefundrequest, key string) (models.Refundresponse , error){
 
-
-	posturl := "http://localhost:8787/api/v1/refunds"
-
-	capreq := models.Bankrefundrequest{
-		Amount: 10,
-		Capture_id: "cap_da145645-203d-4087-8754-8fe458b2a59a",	
+	body, err := json.Marshal(refund_req)
+	if err != nil {
+		return models.Refundresponse{} , fmt.Errorf("Error json marshalling our bank refund request struct! %w", err)
 	}
 
-	body, err := json.Marshal(capreq)
+	r, err := http.NewRequest("POST", cfg.baseURL + "/api/v1/refunds", bytes.NewBuffer(body))
 	if err != nil {
-		fmt.Println("Error message for json marshalling our structs for now!")
-	}
-
-	r, err := http.NewRequest("POST", posturl, bytes.NewBuffer(body))
-	if err != nil {
-		fmt.Println("Error message for creating post request for authorization for now!")
+		return models.Refundresponse{} , fmt.Errorf("Error creating new post request to the bank for refund request! %w", err)
 	}
 
 	r.Header.Add("Content-Type", "application/json")
-	r.Header.Add("Idempotency-Key", "2")
+	r.Header.Add("Idempotency-Key", key)
 
-
-	client := &http.Client{}
-	res, err := client.Do(r)
+	res, err := cfg.httpClient.Do(r)
 	if err != nil{
-		return fmt.Errorf("Error in http client creating request -%s", err.Error())
+		return models.Refundresponse{} , fmt.Errorf("Error configuring new client to the bank for refund request! -%w", err)
 	}
 
 	defer res.Body.Close()
@@ -172,20 +162,14 @@ func (cfg *Bankclientstruct) SendRefundRequestToBank() (error){
 	errormessage := &models.Errorresponse{}
 	if res.StatusCode != http.StatusOK {
 		json.NewDecoder(res.Body).Decode(errormessage)
-		return fmt.Errorf("%s: with %s %v", errormessage.Message, errormessage.Error, res.Status)
+		return models.Refundresponse{},fmt.Errorf("%s: with %s %v", errormessage.Message, errormessage.Error, res.Status)
 	}
 
-	post := &models.Refundresponse{}
-	err = json.NewDecoder(res.Body).Decode(post)
+	post := models.Refundresponse{}
+	err = json.NewDecoder(res.Body).Decode(&post)
 	if err != nil{
-		return fmt.Errorf("Error decoding message response body -%v", res.Status)
+		return models.Refundresponse{},fmt.Errorf("Error decoding message response body response for bank refund request-%w", err)
 		}
 
-	
-	fmt.Println(post.Amount)
-	fmt.Println(post.Refund_id)
-	fmt.Println(post.Refunded_at)
-	fmt.Println(post.Status)
-
-	return nil
+	return post, nil
 }
