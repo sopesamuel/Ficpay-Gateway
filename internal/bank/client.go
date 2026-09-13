@@ -21,7 +21,7 @@ func NewClient(base_url string) *Bankclientstruct{
 	}
 }
 
-func (cfg *Bankclientstruct) SendAuthorizationRequestToBank(bank_auth models.Bankauthrequest, key string) (models.Bankauthresponse, error){
+func (cfg *Bankclientstruct) Authorize(bank_auth models.Bankauthrequest, key string) (models.Bankauthresponse, error){
 
 	body, err := json.Marshal(bank_auth)
 	if err != nil {
@@ -59,7 +59,7 @@ func (cfg *Bankclientstruct) SendAuthorizationRequestToBank(bank_auth models.Ban
 }
 
 
-func (cfg *Bankclientstruct) SendCaptureRequestToBank(bankcapture_req models.Bankcapturerequest, key string) (models.Captureresponse,error){
+func (cfg *Bankclientstruct) Capture(bankcapture_req models.Bankcapturerequest, key string) (models.Captureresponse,error){
 
 	body, err := json.Marshal(bankcapture_req)
 	if err != nil {
@@ -97,7 +97,7 @@ func (cfg *Bankclientstruct) SendCaptureRequestToBank(bankcapture_req models.Ban
 	return post, nil
 }
 
-func (cfg *Bankclientstruct) SendVoidRequestToBank(bank_void models.Bankvoidrequest, key string) (models.Voidresponse, error){
+func (cfg *Bankclientstruct) Void(bank_void models.Bankvoidrequest, key string) (models.Voidresponse, error){
 
 	body, err := json.Marshal(bank_void)
 	if err != nil {
@@ -137,7 +137,7 @@ func (cfg *Bankclientstruct) SendVoidRequestToBank(bank_void models.Bankvoidrequ
 }
 
 
-func (cfg *Bankclientstruct) SendRefundRequestToBank(refund_req models.Bankrefundrequest, key string) (models.Refundresponse , error){
+func (cfg *Bankclientstruct) Refund(refund_req models.Bankrefundrequest, key string) (models.Refundresponse , error){
 
 	body, err := json.Marshal(refund_req)
 	if err != nil {
