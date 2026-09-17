@@ -10,5 +10,6 @@ type RepositoryInterface interface {
 	UpdatePaymentState(payment *models.Payment) error
 	GetPaymentByID(paymentID string) (models.Payment, error)
 	GetStatusByID(orderID string) (string, error)
+	GetIdempotencyKey(key string) (string, error)
 	GetHistoryByCustomerID(customerID string) ([]models.Payment, error)
 }

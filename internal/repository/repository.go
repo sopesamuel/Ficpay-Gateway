@@ -98,6 +98,19 @@ func (r *Repository) GetStatusByID(orderID string) (string, error) {
 	return status, nil
 }
 
+func (r *Repository) GetIdempotencyKey(key string) (string, error) {
+	var paymentID string
+
+	stmt := `SELECT payment_id FROM idempotency_keys WHERE idempotency_key = ?`
+
+	err := r.DB.QueryRow(stmt, key).Scan(&paymentID)
+	if err != nil {
+		return "", err
+	}
+
+	return paymentID, nil
+}
+
 func (r *Repository) GetHistoryByCustomerID(customerID string) ([]models.Payment, error){
 	
 
