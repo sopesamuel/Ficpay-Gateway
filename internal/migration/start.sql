@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS payments (
     refund_id VARCHAR(36) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-)
+);
 
 -- update auto refreshes after there is a change, the "on update" i mean.
 
@@ -22,6 +22,13 @@ CREATE TABLE IF NOT EXISTS state_history (
     to_status ENUM('PENDING','AUTHORIZED','CAPTURED','VOIDED','REFUNDED') NOT NULL, 
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (payment_id) REFERENCES payments(payment_id)
-)
+);
+
+CREATE TABLE IF NOT EXISTS idempotency_keys (
+    idempotency_key VARCHAR(64) PRIMARY KEY,
+    payment_id VARCHAR(36) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (payment_id) REFERENCES payments(payment_id)
+);
 
 -- the foreign key is a mysql keyword that tells mysql that before accepting into payment id, check if it exists in payments payment id
