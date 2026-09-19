@@ -1,6 +1,7 @@
 package service
 
 import (
+	
 	"fmt"
 	"mart-gateway/internal/models"
 	"slices"
@@ -37,7 +38,11 @@ func StateMachine(from, to string) bool {
 
 func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq models.Bankauthrequest, key string) (models.Payment,error){
 	//send the request to the bank TO INITIATE PENDING AND AUTHORIZATION states
-	
+	_, err := state.repository.GetIdempotencyKey(key)
+	if err != nil {
+		return models.Payment{}, fmt.Errorf("failed to query payment_id of idempotency key from idempotency db): %w", err)
+	}
+
 	auth_payment := models.Payment{
 		PaymentID: uuid.New().String(), 
 		OrderID: req.Order_id, 
@@ -47,7 +52,9 @@ func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq model
 		Status: "PENDING", 
 		}
 
-	err := state.repository.CreatePayment(&auth_payment)
+	
+
+	err = state.repository.CreatePayment(&auth_payment)
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("starting payment failed (pending state): %w", err)
 	}
