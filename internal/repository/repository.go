@@ -111,6 +111,16 @@ func (r *Repository) GetIdempotencyKey(key string) (string, error) {
 	return paymentID, nil
 }
 
+func (r *Repository) CreateIdempotencyKey(key, paymentID string) error{
+	_, err := r.DB.Exec(
+		`INSERT INTO idempotency_keys (idempotency_key, payment_id)
+		VALUES (?, ?)`,
+		key,
+		paymentID,
+	)
+	return err
+}
+
 func (r *Repository) GetHistoryByCustomerID(customerID string) ([]models.Payment, error){
 	
 

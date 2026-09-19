@@ -11,5 +11,6 @@ type RepositoryInterface interface {
 	GetPaymentByID(paymentID string) (models.Payment, error)
 	GetStatusByID(orderID string) (string, error)
 	GetIdempotencyKey(key string) (string, error)
+	CreateIdempotencyKey(key, paymentID string) error
 	GetHistoryByCustomerID(customerID string) ([]models.Payment, error)
 }
