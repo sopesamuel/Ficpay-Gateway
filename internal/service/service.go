@@ -54,7 +54,7 @@ func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq model
 		Status: "PENDING", 
 		}
 	
-
+	//We record the pending state to both payment and state history in our db
 	err = state.repository.CreatePayment(&auth_payment)
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("starting payment failed (pending state): %w", err)
@@ -86,7 +86,7 @@ func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq model
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("failed to store history OF authorization record to state history db: %w", err)
 	}
-	
+
 	err = state.repository.CreateIdempotencyKey(key, auth_payment.PaymentID)
 	if err != nil {
 		return models.Payment{}, fmt.Errorf("failed to store idempotency key: %w", err)
