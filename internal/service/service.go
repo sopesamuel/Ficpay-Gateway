@@ -1,7 +1,7 @@
 package service
 
 import (
-	
+	"database/sql"
 	"fmt"
 	"mart-gateway/internal/models"
 	"slices"
@@ -38,11 +38,13 @@ func StateMachine(from, to string) bool {
 
 func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq models.Bankauthrequest, key string) (models.Payment,error){
 	//send the request to the bank TO INITIATE PENDING AND AUTHORIZATION states
-	_, err := state.repository.GetIdempotencyKey(key)
-	if err != nil {
+	existingpaymentID, err := state.repository.GetIdempotencyKey(key)
+	if err == nil {
+		return state.repository.GetPaymentByID(existingpaymentID)
+	} else if err != sql.ErrNoRows {
 		return models.Payment{}, fmt.Errorf("failed to query payment_id of idempotency key from idempotency db): %w", err)
 	}
-
+	
 	auth_payment := models.Payment{
 		PaymentID: uuid.New().String(), 
 		OrderID: req.Order_id, 
@@ -51,7 +53,6 @@ func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq model
 		Currency: "USD", 
 		Status: "PENDING", 
 		}
-
 	
 
 	err = state.repository.CreatePayment(&auth_payment)
@@ -85,7 +86,12 @@ func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq model
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("failed to store history OF authorization record to state history db: %w", err)
 	}
-
+	
+	err = state.repository.CreateIdempotencyKey(key, auth_payment.PaymentID)
+	if err != nil {
+		return models.Payment{}, fmt.Errorf("failed to store idempotency key: %w", err)
+	}
+	
 	return  auth_payment, nil
 }
 
