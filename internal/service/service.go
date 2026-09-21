@@ -96,6 +96,13 @@ func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq model
 }
 
 func (state *MainService) CapturePayment(payment_id string, bankreq models.Bankcapturerequest, key string) (models.Payment, error){
+	existingpaymentID, err := state.repository.GetIdempotencyKey(key)
+	if err == nil {
+		return state.repository.GetPaymentByID(existingpaymentID)
+	} else if err != sql.ErrNoRows {
+		return models.Payment{}, fmt.Errorf("failed to query payment_id of idempotency key from idempotency db): %w", err)
+	}
+	
 	res_payment ,err := state.repository.GetPaymentByID(payment_id)
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("failed to get payment reference from db: %w", err)
@@ -124,6 +131,12 @@ func (state *MainService) CapturePayment(payment_id string, bankreq models.Bankc
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("failed to store captured state history to state history db: %w", err)
 	}
+
+	err = state.repository.CreateIdempotencyKey(key, res_payment.PaymentID)
+	if err != nil {
+		return models.Payment{}, fmt.Errorf("failed to store idempotency key: %w", err)
+	}
+	
 
 	return res_payment, nil
 }
