@@ -148,6 +148,7 @@ func (state *MainService) VoidPayment(payment_id string, bankreq models.Bankvoid
 	} else if err != sql.ErrNoRows {
 		return models.Payment{}, fmt.Errorf("failed to query payment_id of idempotency key from idempotency db): %w", err)
 	}
+
 	res_payment ,err := state.repository.GetPaymentByID(payment_id)
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("failed to get payment reference from db for void transaction: %w", err)
@@ -175,7 +176,7 @@ func (state *MainService) VoidPayment(payment_id string, bankreq models.Bankvoid
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("Unable to store voided transaction to state history db: %w", err)
 	}
-	
+
 	err = state.repository.CreateIdempotencyKey(key, res_payment.PaymentID)
 	if err != nil {
 		return models.Payment{}, fmt.Errorf("failed to store idempotency key: %w", err)
@@ -185,6 +186,13 @@ func (state *MainService) VoidPayment(payment_id string, bankreq models.Bankvoid
 }
 
 func (state *MainService) RefundPayment(payment_id string, refundreq models.Bankrefundrequest, key string,) (models.Payment, error){
+
+	existingpaymentID, err := state.repository.GetIdempotencyKey(key)
+	if err == nil {
+		return state.repository.GetPaymentByID(existingpaymentID)
+	} else if err != sql.ErrNoRows {
+		return models.Payment{}, fmt.Errorf("failed to query payment_id of idempotency key from idempotency db): %w", err)
+	}
 
 	res_payment ,err := state.repository.GetPaymentByID(payment_id)
 	if err != nil{
@@ -212,6 +220,11 @@ func (state *MainService) RefundPayment(payment_id string, refundreq models.Bank
 	err = state.repository.CreateStateHistory(&models.StateHistory{PaymentID: res_payment.PaymentID, FromStatus: &prev_status, ToStatus: "REFUNDED",})
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("Unable to store refund transaction to state history db: %w", err)
+	}
+
+	err = state.repository.CreateIdempotencyKey(key, res_payment.PaymentID)
+	if err != nil {
+		return models.Payment{}, fmt.Errorf("failed to store idempotency key: %w", err)
 	}
 
 	return res_payment, nil
