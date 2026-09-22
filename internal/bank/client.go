@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"mart-gateway/internal/models"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
 //This holds the shared state used by all these methods.
@@ -28,19 +30,40 @@ func (cfg *Bankclientstruct) Authorize(bank_auth models.Bankauthrequest, key str
 		return models.Bankauthresponse{}, fmt.Errorf("Error json marshalling our bank authorization request struct! %w", err)
 	}
 
-	r, err := http.NewRequest("POST", cfg.baseURL + "/api/v1/authorizations", bytes.NewBuffer(body))
-	if err != nil {
-		return models.Bankauthresponse{}, fmt.Errorf("Error creating new post request to the bank for authorization! %w", err)
+	//Handling retry strategies to the bank
+	var res *http.Response
+	maxRetries := 3
+	delay := 300 * time.Millisecond
+
+	for range maxRetries {
+		r, err := http.NewRequest("POST", cfg.baseURL+"/api/v1/authorizations", bytes.NewBuffer(body))
+		if err != nil {
+			return models.Bankauthresponse{}, fmt.Errorf("Error creating new post request to the bank for authorization! %w", err)
+		}
+		r.Header.Add("Content-Type", "application/json")
+		r.Header.Add("Idempotency-Key", key)
+
+		res, err = cfg.httpClient.Do(r)
+		if err != nil {
+			time.Sleep(delay + time.Duration(rand.Intn(200))*time.Millisecond)
+			delay *= 2
+			continue
+		}
+
+		if res.StatusCode == http.StatusInternalServerError {
+			res.Body.Close()
+			time.Sleep(delay + time.Duration(rand.Intn(200))*time.Millisecond)
+			delay *= 2
+			continue
+		}
+		break 	
 	}
 
-	r.Header.Add("Content-Type", "application/json")
-	r.Header.Add("Idempotency-Key", key)
-
-	res, err := cfg.httpClient.Do(r)
-	if err != nil{
-		return models.Bankauthresponse{}, fmt.Errorf("Error configuring new client to the bank for authorization!- %w", err)
+	if res == nil {
+		return models.Bankauthresponse{}, fmt.Errorf("bank authorization failed after %d retries", maxRetries)
 	}
 
+	
 	defer res.Body.Close()
 
 	errormessage := &models.Errorresponse{}
