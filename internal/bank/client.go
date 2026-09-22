@@ -10,20 +10,20 @@ import (
 	"time"
 )
 
-//This holds the shared state used by all these methods.
+// This holds the shared state used by all these methods.
 type Bankclientstruct struct {
-	baseURL string
+	baseURL    string
 	httpClient *http.Client
 }
 
-func NewClient(base_url string) *Bankclientstruct{
+func NewClient(base_url string) *Bankclientstruct {
 	return &Bankclientstruct{
-		baseURL: base_url,
+		baseURL:    base_url,
 		httpClient: &http.Client{},
 	}
 }
 
-func (cfg *Bankclientstruct) Authorize(bank_auth models.Bankauthrequest, key string) (models.Bankauthresponse, error){
+func (cfg *Bankclientstruct) Authorize(bank_auth models.Bankauthrequest, key string) (models.Bankauthresponse, error) {
 
 	body, err := json.Marshal(bank_auth)
 	if err != nil {
@@ -56,14 +56,13 @@ func (cfg *Bankclientstruct) Authorize(bank_auth models.Bankauthrequest, key str
 			delay *= 2
 			continue
 		}
-		break 	
+		break
 	}
 
 	if res == nil {
 		return models.Bankauthresponse{}, fmt.Errorf("bank authorization failed after %d retries", maxRetries)
 	}
 
-	
 	defer res.Body.Close()
 
 	errormessage := &models.Errorresponse{}
@@ -74,33 +73,51 @@ func (cfg *Bankclientstruct) Authorize(bank_auth models.Bankauthrequest, key str
 
 	post := models.Bankauthresponse{}
 	err = json.NewDecoder(res.Body).Decode(&post)
-	if err != nil{
+	if err != nil {
 		return models.Bankauthresponse{}, fmt.Errorf("Error decoding message response body for bank authorization -%v, %w", res.Status, err)
 	}
 
-	return post,nil
+	return post, nil
 }
 
-
-func (cfg *Bankclientstruct) Capture(bankcapture_req models.Bankcapturerequest, key string) (models.Captureresponse,error){
+func (cfg *Bankclientstruct) Capture(bankcapture_req models.Bankcapturerequest, key string) (models.Captureresponse, error) {
 
 	body, err := json.Marshal(bankcapture_req)
 	if err != nil {
 		return models.Captureresponse{}, fmt.Errorf("Error json marshalling our bank capture request struct! %w", err)
 	}
 
-	r, err := http.NewRequest("POST", cfg.baseURL + "/api/v1/captures", bytes.NewBuffer(body))
-	if err != nil {
-		return models.Captureresponse{}, fmt.Errorf("Error creating new post request to the bank for capture request! %w", err)
+	//Handling retry strategies to the bank
+	var res *http.Response
+	maxRetries := 3
+	delay := 300 * time.Millisecond
+
+	for range maxRetries {
+		r, err := http.NewRequest("POST", cfg.baseURL+"/api/v1/captures", bytes.NewBuffer(body))
+		if err != nil {
+			return models.Captureresponse{}, fmt.Errorf("Error creating new post request to the bank for capture request! %w", err)
+		}
+		r.Header.Add("Content-Type", "application/json")
+		r.Header.Add("Idempotency-Key", key)
+
+		res, err = cfg.httpClient.Do(r)
+		if err != nil {
+			time.Sleep(delay + time.Duration(rand.Intn(200))*time.Millisecond)
+			delay *= 2
+			continue
+		}
+
+		if res.StatusCode == http.StatusInternalServerError {
+			res.Body.Close()
+			time.Sleep(delay + time.Duration(rand.Intn(200))*time.Millisecond)
+			delay *= 2
+			continue
+		}
+		break
 	}
 
-	r.Header.Add("Content-Type", "application/json")
-	r.Header.Add("Idempotency-Key", key)
-
-	
-	res, err := cfg.httpClient.Do(r)
-	if err != nil{
-		return models.Captureresponse{}, fmt.Errorf("Error configuring new client to the bank for capture request! -%w", err)
+	if res == nil {
+		return models.Captureresponse{}, fmt.Errorf("bank capture failed after %d retries", maxRetries)
 	}
 
 	defer res.Body.Close()
@@ -113,33 +130,51 @@ func (cfg *Bankclientstruct) Capture(bankcapture_req models.Bankcapturerequest, 
 
 	post := models.Captureresponse{}
 	err = json.NewDecoder(res.Body).Decode(&post)
-	if err != nil{
-		return models.Captureresponse{},  fmt.Errorf("Error decoding message response body for bank capture request -%v, %w", res.Status, err)
-		}
+	if err != nil {
+		return models.Captureresponse{}, fmt.Errorf("Error decoding message response body for bank capture request -%v, %w", res.Status, err)
+	}
 
 	return post, nil
 }
 
-func (cfg *Bankclientstruct) Void(bank_void models.Bankvoidrequest, key string) (models.Voidresponse, error){
+func (cfg *Bankclientstruct) Void(bank_void models.Bankvoidrequest, key string) (models.Voidresponse, error) {
 
 	body, err := json.Marshal(bank_void)
 	if err != nil {
 		return models.Voidresponse{}, fmt.Errorf("Error json marshalling our bank void request struct! %w", err)
 	}
 
-	r, err := http.NewRequest("POST", cfg.baseURL + "/api/v1/voids", bytes.NewBuffer(body))
-	if err != nil {
-		return models.Voidresponse{}, fmt.Errorf("Error creating new post request to the bank for void request! %w", err)
+	//Handling retry strategies to the bank
+	var res *http.Response
+	maxRetries := 3
+	delay := 300 * time.Millisecond
+
+	for range maxRetries {
+		r, err := http.NewRequest("POST", cfg.baseURL+"/api/v1/voids", bytes.NewBuffer(body))
+		if err != nil {
+			return models.Voidresponse{}, fmt.Errorf("Error creating new post request to the bank for void request! %w", err)
+		}
+		r.Header.Add("Content-Type", "application/json")
+		r.Header.Add("Idempotency-Key", key)
+
+		res, err = cfg.httpClient.Do(r)
+		if err != nil {
+			time.Sleep(delay + time.Duration(rand.Intn(200))*time.Millisecond)
+			delay *= 2
+			continue
+		}
+
+		if res.StatusCode == http.StatusInternalServerError {
+			res.Body.Close()
+			time.Sleep(delay + time.Duration(rand.Intn(200))*time.Millisecond)
+			delay *= 2
+			continue
+		}
+		break
 	}
 
-	r.Header.Add("Content-Type", "application/json")
-	r.Header.Add("Idempotency-Key", key)
-
-
-	
-	res, err := cfg.httpClient.Do(r)
-	if err != nil{
-		return models.Voidresponse{} , fmt.Errorf("Error configuring new client to the bank for void request! -%w", err)
+	if res == nil {
+		return models.Voidresponse{}, fmt.Errorf("bank void failed after %d retries", maxRetries)
 	}
 
 	defer res.Body.Close()
@@ -147,37 +182,56 @@ func (cfg *Bankclientstruct) Void(bank_void models.Bankvoidrequest, key string) 
 	errormessage := &models.Errorresponse{}
 	if res.StatusCode != http.StatusOK {
 		json.NewDecoder(res.Body).Decode(errormessage)
-		return models.Voidresponse{},fmt.Errorf("%s: with %s %v", errormessage.Message, errormessage.Error, res.Status)
+		return models.Voidresponse{}, fmt.Errorf("%s: with %s %v", errormessage.Message, errormessage.Error, res.Status)
 	}
 
 	post := models.Voidresponse{}
 	err = json.NewDecoder(res.Body).Decode(&post)
-	if err != nil{
+	if err != nil {
 		return models.Voidresponse{}, fmt.Errorf("Error decoding message response body response for bank void request-%w", err)
 	}
 
-	return post,nil
+	return post, nil
 }
 
-
-func (cfg *Bankclientstruct) Refund(refund_req models.Bankrefundrequest, key string) (models.Refundresponse , error){
+func (cfg *Bankclientstruct) Refund(refund_req models.Bankrefundrequest, key string) (models.Refundresponse, error) {
 
 	body, err := json.Marshal(refund_req)
 	if err != nil {
-		return models.Refundresponse{} , fmt.Errorf("Error json marshalling our bank refund request struct! %w", err)
+		return models.Refundresponse{}, fmt.Errorf("Error json marshalling our bank refund request struct! %w", err)
 	}
 
-	r, err := http.NewRequest("POST", cfg.baseURL + "/api/v1/refunds", bytes.NewBuffer(body))
-	if err != nil {
-		return models.Refundresponse{} , fmt.Errorf("Error creating new post request to the bank for refund request! %w", err)
+	//Handling retry strategies to the bank
+	var res *http.Response
+	maxRetries := 3
+	delay := 300 * time.Millisecond
+
+	for range maxRetries {
+		r, err := http.NewRequest("POST", cfg.baseURL+"/api/v1/refunds", bytes.NewBuffer(body))
+		if err != nil {
+			return models.Refundresponse{}, fmt.Errorf("Error creating new post request to the bank for refund request! %w", err)
+		}
+		r.Header.Add("Content-Type", "application/json")
+		r.Header.Add("Idempotency-Key", key)
+
+		res, err = cfg.httpClient.Do(r)
+		if err != nil {
+			time.Sleep(delay + time.Duration(rand.Intn(200))*time.Millisecond)
+			delay *= 2
+			continue
+		}
+
+		if res.StatusCode == http.StatusInternalServerError {
+			res.Body.Close()
+			time.Sleep(delay + time.Duration(rand.Intn(200))*time.Millisecond)
+			delay *= 2
+			continue
+		}
+		break
 	}
 
-	r.Header.Add("Content-Type", "application/json")
-	r.Header.Add("Idempotency-Key", key)
-
-	res, err := cfg.httpClient.Do(r)
-	if err != nil{
-		return models.Refundresponse{} , fmt.Errorf("Error configuring new client to the bank for refund request! -%w", err)
+	if res == nil {
+		return models.Refundresponse{}, fmt.Errorf("bank refund failed after %d retries", maxRetries)
 	}
 
 	defer res.Body.Close()
@@ -185,14 +239,14 @@ func (cfg *Bankclientstruct) Refund(refund_req models.Bankrefundrequest, key str
 	errormessage := &models.Errorresponse{}
 	if res.StatusCode != http.StatusOK {
 		json.NewDecoder(res.Body).Decode(errormessage)
-		return models.Refundresponse{},fmt.Errorf("%s: with %s %v", errormessage.Message, errormessage.Error, res.Status)
+		return models.Refundresponse{}, fmt.Errorf("%s: with %s %v", errormessage.Message, errormessage.Error, res.Status)
 	}
 
 	post := models.Refundresponse{}
 	err = json.NewDecoder(res.Body).Decode(&post)
-	if err != nil{
-		return models.Refundresponse{},fmt.Errorf("Error decoding message response body response for bank refund request-%w", err)
-		}
+	if err != nil {
+		return models.Refundresponse{}, fmt.Errorf("Error decoding message response body response for bank refund request-%w", err)
+	}
 
 	return post, nil
 }
