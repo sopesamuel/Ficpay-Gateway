@@ -22,10 +22,8 @@ func ActivateService(bankService BankInterface, repo RepositoryInterface) *MainS
 
 func StateMachine(from, to string) bool {
 	state := map[string][]string{
-		"PENDING": {"AUTHORIZED"},
 		"AUTHORIZED": {"CAPTURED", "VOIDED"},
 		"CAPTURED": {"REFUNDED"},
-		
 	}
 
 	if slices.Contains(state[from], to){
