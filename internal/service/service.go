@@ -96,6 +96,7 @@ func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq model
 }
 
 func (state *MainService) CapturePayment(payment_id string, key string) (models.Payment, error){
+	//Quick check to our gateway, if it comes back that no error it means this capture state exists and no need to create one
 	existingpaymentID, err := state.repository.GetIdempotencyKey(key)
 	if err == nil {
 		return state.repository.GetPaymentByID(existingpaymentID)
@@ -112,6 +113,7 @@ func (state *MainService) CapturePayment(payment_id string, key string) (models.
 		return models.Payment{},  fmt.Errorf("Invalid payment transition from: %s to %s",res_payment.Status, "CAPTURED")
 	}
 
+	//after our state machine checks then we interact with the bank
 	bankreq := models.Bankcapturerequest{
 		Amount: res_payment.Amount,
 		Authorization_id: *res_payment.AuthID,
@@ -146,7 +148,7 @@ func (state *MainService) CapturePayment(payment_id string, key string) (models.
 	return res_payment, nil
 }
 
-func (state *MainService) VoidPayment(payment_id string, bankreq models.Bankvoidrequest, key string) (models.Payment, error){
+func (state *MainService) VoidPayment(payment_id string, key string) (models.Payment, error){
 	existingpaymentID, err := state.repository.GetIdempotencyKey(key)
 	if err == nil {
 		return state.repository.GetPaymentByID(existingpaymentID)
@@ -161,6 +163,10 @@ func (state *MainService) VoidPayment(payment_id string, bankreq models.Bankvoid
 
 	if !StateMachine(res_payment.Status, "VOIDED"){
 		return models.Payment{},  fmt.Errorf("Invalid payment transition from: %s to %s",res_payment.Status, "VOIDED")
+	}
+
+	bankreq := models.Bankvoidrequest{
+		Authorization_id: *res_payment.AuthID,
 	}
 
 	void_res, err := state.bank.Void(bankreq, key)
@@ -190,7 +196,7 @@ func (state *MainService) VoidPayment(payment_id string, bankreq models.Bankvoid
 	return res_payment, nil
 }
 
-func (state *MainService) RefundPayment(payment_id string, refundreq models.Bankrefundrequest, key string,) (models.Payment, error){
+func (state *MainService) RefundPayment(payment_id string, key string,) (models.Payment, error){
 
 	existingpaymentID, err := state.repository.GetIdempotencyKey(key)
 	if err == nil {
@@ -206,6 +212,11 @@ func (state *MainService) RefundPayment(payment_id string, refundreq models.Bank
 
 	if !StateMachine(res_payment.Status, "REFUNDED"){
 		return models.Payment{},  fmt.Errorf("Invalid payment transition from: %s to %s",res_payment.Status, "REFUNDED")
+	}
+
+	refundreq := models.Bankrefundrequest{
+		Amount: res_payment.Amount,
+		Capture_id: *res_payment.CaptureID,
 	}
 
 	void_res, err := state.bank.Refund(refundreq, key)
