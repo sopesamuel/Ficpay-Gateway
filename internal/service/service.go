@@ -36,7 +36,7 @@ func StateMachine(from, to string) bool {
 
 //Authorize to bank from ficmart
 
-func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq models.Bankauthrequest, key string) (models.Payment,error){
+func (state *MainService) AuthorizePayment(req models.Martrequest, key string) (models.Payment,error){
 	//send the request to the bank TO INITIATE PENDING AND AUTHORIZATION states
 	existingpaymentID, err := state.repository.GetIdempotencyKey(key)
 	if err == nil {
@@ -64,6 +64,14 @@ func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq model
 	err = state.repository.CreateStateHistory(&models.StateHistory{ PaymentID: auth_payment.PaymentID, ToStatus: "PENDING",})
 	if err != nil{
 		return models.Payment{},  fmt.Errorf("failed to store pending state history to stae history db: %w", err)
+	}
+
+	bankreq := models.Bankauthrequest{
+		Amount: req.Amount,
+		Card_number : req.Card_number,
+		Cvv : req.Cvv,
+		Expiry_month : req.Expiry_month,
+		Expiry_year : req.Expiry_year,
 	}
 
 	//Then we initiate authorization request to bank
