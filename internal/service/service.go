@@ -95,7 +95,7 @@ func (state *MainService) AuthorizePayment(req models.Martrequest, bankreq model
 	return  auth_payment, nil
 }
 
-func (state *MainService) CapturePayment(payment_id string, bankreq models.Bankcapturerequest, key string) (models.Payment, error){
+func (state *MainService) CapturePayment(payment_id string, key string) (models.Payment, error){
 	existingpaymentID, err := state.repository.GetIdempotencyKey(key)
 	if err == nil {
 		return state.repository.GetPaymentByID(existingpaymentID)
@@ -110,6 +110,11 @@ func (state *MainService) CapturePayment(payment_id string, bankreq models.Bankc
 
 	if !StateMachine(res_payment.Status, "CAPTURED"){
 		return models.Payment{},  fmt.Errorf("Invalid payment transition from: %s to %s",res_payment.Status, "CAPTURED")
+	}
+
+	bankreq := models.Bankcapturerequest{
+		Amount: res_payment.Amount,
+		Authorization_id: *res_payment.AuthID,
 	}
 
 	cap_res, err := state.bank.Capture(bankreq, key)
