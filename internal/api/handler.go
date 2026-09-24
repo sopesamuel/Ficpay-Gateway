@@ -17,3 +17,9 @@ func refundRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
 func authorizationRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
 
 }
+func getPaymentStatus(w http.ResponseWriter, r *http.Request) {
+
+}
+func getPaymentHistory(w http.ResponseWriter, r *http.Request) {
+
+}
