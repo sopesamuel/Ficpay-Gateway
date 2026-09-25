@@ -129,9 +129,29 @@ func (h *Handler) refundRequestFromFicmart(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *Handler) getPaymentStatus(w http.ResponseWriter, r *http.Request) {
+	orderID := r.PathValue("order_id")
 
+    status, err := h.service.GetStatus(orderID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadGateway)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(status)
 }
 
 func (h *Handler) getPaymentHistory(w http.ResponseWriter, r *http.Request) {
+	customerID := r.PathValue("customer_id")
 
+    history, err := h.service.GetHistory(customerID)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadGateway)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(history)
 }
