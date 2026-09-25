@@ -1,5 +1,8 @@
 package api
+
 import (
+	"encoding/json"
+	"mart-gateway/internal/models"
 	"net/http"
 )
 
@@ -12,7 +15,30 @@ func NewHandler(service HandlerInterface) *Handler{
 }
 
 //handlers for capture, void, refund, authorization
-func authorizationRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) authorizationRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
+	var req models.Martrequest
+
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return 
+	}
+
+	key := r.Header.Get("Idempotency-Key")
+	if key == ""{
+		http.Error(w, "missing idempotency key", http.StatusBadRequest)
+		return
+	}
+
+	payment, err := h.service.AuthorizePayment(req, key)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(payment)
 
 }
 
