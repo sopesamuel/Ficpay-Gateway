@@ -3,7 +3,7 @@ import (
 	"net/http"
 )
 
-func (h Handler) routes() http.Handler {
+func (h *Handler) Routes() http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /capture", h.captureRequestFromFicmart)
