@@ -4,6 +4,10 @@ import (
 	"time"
 )
 
+type PaymentRequest struct {
+    PaymentID string `json:"payment_id"`
+}
+
 //payment life cycle
 type Payment struct {
     PaymentID  string

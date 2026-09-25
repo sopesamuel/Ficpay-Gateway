@@ -15,16 +15,16 @@ func NewHandler(service HandlerInterface) *Handler{
 }
 
 //handlers for capture, void, refund, authorization
-func (h *Handler) authorizationRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) authorizationRequestFromFicmart(w http.ResponseWriter, r *http.Request){
 	var req models.Martrequest
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
-		return 
+		return
 	}
 
-	key := r.Header.Get("Idempotency-Key")
+	key := r.Header.Get("Idempotency-key")
 	if key == ""{
 		http.Error(w, "missing idempotency key", http.StatusBadRequest)
 		return
@@ -39,14 +39,41 @@ func (h *Handler) authorizationRequestFromFicmart(w http.ResponseWriter, r *http
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(payment)
-
 }
+
+
 
 func (h *Handler) captureRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
+	var req models.PaymentRequest
 
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	key := r.Header.Get("Idempotency-key")
+	if key == ""{
+		http.Error(w, "missing idempotency key", http.StatusBadRequest)
+		return
+	}
+
+
+
+	capturedpayment, err := h.service.CapturePayment(req.PaymentID, key)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(capturedpayment)
 }
-func (h *Handler) voidRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
 
+
+func (h *Handler) voidRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
+	
 }
 
 func (h *Handler) refundRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
