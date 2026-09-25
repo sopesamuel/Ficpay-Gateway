@@ -3,15 +3,15 @@ import (
 	"net/http"
 )
 
-func routes() http.Handler {
+func (h Handler) routes() http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /capture", captureRequestFromFicmart)
-	mux.HandleFunc("POST /authorize", authorizationRequestFromFicmart)
-	mux.HandleFunc("POST /void", voidRequestFromFicmart)
-	mux.HandleFunc("POST /refund", refundRequestFromFicmart)
-	mux.HandleFunc("GET /payments/{order_id}", getPaymentStatus)
-	mux.HandleFunc("GET /customers/{customer_id}/payments", getPaymentHistory)
+	mux.HandleFunc("POST /capture", h.captureRequestFromFicmart)
+	mux.HandleFunc("POST /authorize", h.authorizationRequestFromFicmart)
+	mux.HandleFunc("POST /void", h.voidRequestFromFicmart)
+	mux.HandleFunc("POST /refund", h.refundRequestFromFicmart)
+	mux.HandleFunc("GET /payments/{order_id}", h.getPaymentStatus)
+	mux.HandleFunc("GET /customers/{customer_id}/payments", h.getPaymentHistory)
 
 	return mux
 }

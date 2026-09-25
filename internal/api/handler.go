@@ -42,21 +42,21 @@ func (h *Handler) authorizationRequestFromFicmart(w http.ResponseWriter, r *http
 
 }
 
-func captureRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) captureRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
 
 }
-func voidRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func refundRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) voidRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getPaymentStatus(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) refundRequestFromFicmart(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getPaymentHistory(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getPaymentStatus(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (h *Handler) getPaymentHistory(w http.ResponseWriter, r *http.Request) {
 
 }
